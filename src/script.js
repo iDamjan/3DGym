@@ -9,11 +9,19 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 // Canvas
 const canvas = document.querySelector("canvas.webgl");
+const loadingElement = document.querySelector(".wrapper");
+
+const loadingManager = new THREE.LoadingManager(() => {
+  init();
+  setTimeout(() => {
+    loadingElement.style.display = "none";
+  }, 1000);
+});
 
 // Scene
 const scene = new THREE.Scene();
 
-const gltfLoader = new GLTFLoader();
+const gltfLoader = new GLTFLoader(loadingManager);
 const textureLoader = new THREE.TextureLoader();
 
 const brickWallTexture = textureLoader.load("textures/BrickWallBaked.jpg");
@@ -118,84 +126,84 @@ gltfLoader.load("models/IsoGym.glb", (gltf) => {
  * Textures
  */
 
-console.log("happening");
+function init() {
+  const ambientLight = new THREE.AmbientLight("white", 2);
+  scene.add(ambientLight);
 
-const ambientLight = new THREE.AmbientLight("white", 2);
-scene.add(ambientLight);
+  /**
+   * Sizes
+   */
+  const sizes = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
 
-/**
- * Sizes
- */
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight,
-};
+  window.addEventListener("resize", () => {
+    // Update sizes
+    sizes.width = window.innerWidth;
+    sizes.height = window.innerHeight;
 
-window.addEventListener("resize", () => {
-  // Update sizes
-  sizes.width = window.innerWidth;
-  sizes.height = window.innerHeight;
+    // Update camera
+    camera.aspect = sizes.width / sizes.height;
+    camera.updateProjectionMatrix();
 
-  // Update camera
-  camera.aspect = sizes.width / sizes.height;
-  camera.updateProjectionMatrix();
+    // Update renderer
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  });
 
-  // Update renderer
+  /**
+   * Camera
+   */
+  // Base camera
+  const camera = new THREE.PerspectiveCamera(
+    60,
+    sizes.width / sizes.height,
+    0.1,
+    100
+  );
+  camera.position.set(3.5, 1.9, 4.5);
+
+  // Update the camera's quaternion representation based on Euler angles
+  camera.setRotationFromEuler(camera.rotation);
+  scene.add(camera);
+
+  // Controls
+  const controls = new OrbitControls(camera, canvas);
+
+  // Oribt controls settings
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.025;
+  controls.rotateSpeed = 0.3;
+  controls.maxPolarAngle = Math.PI / 2;
+  controls.maxAzimuthAngle = 1.7;
+  controls.minAzimuthAngle = 0;
+  controls.enableZoom = false;
+
+  /**
+   * Renderer
+   */
+  const renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: true,
+  });
   renderer.setSize(sizes.width, sizes.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-});
 
-/**
- * Camera
- */
-// Base camera
-const camera = new THREE.PerspectiveCamera(
-  60,
-  sizes.width / sizes.height,
-  0.1,
-  100
-);
-camera.position.set(3.5, 1.9, 4.5);
+  /**
+   * Animate
+   */
 
-// Update the camera's quaternion representation based on Euler angles
-camera.setRotationFromEuler(camera.rotation);
-scene.add(camera);
+  const tick = () => {
+    // Update controls
+    controls.update();
 
-// Controls
-const controls = new OrbitControls(camera, canvas);
+    // Render
+    renderer.render(scene, camera);
 
-// Oribt controls settings
-controls.enableDamping = true;
-controls.dampingFactor = 0.025;
-controls.rotateSpeed = 0.3;
-controls.maxPolarAngle = Math.PI / 2;
-controls.maxAzimuthAngle = 1.7;
-controls.minAzimuthAngle = 0;
-controls.enableZoom = false;
+    // Call tick again on the next frame
+    window.requestAnimationFrame(tick);
+  };
 
-/**
- * Renderer
- */
-const renderer = new THREE.WebGLRenderer({
-  canvas: canvas,
-  antialias: true,
-});
-renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-/**
- * Animate
- */
-
-const tick = () => {
-  // Update controls
-  controls.update();
-
-  // Render
-  renderer.render(scene, camera);
-
-  // Call tick again on the next frame
-  window.requestAnimationFrame(tick);
-};
-
-tick();
+  tick();
+}
