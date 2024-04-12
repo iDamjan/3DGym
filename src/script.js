@@ -18,6 +18,14 @@ const loadingManager = new THREE.LoadingManager(() => {
   }, 1000);
 });
 
+/**
+ * Sizes
+ */
+const sizes = {
+  width: window.innerWidth,
+  height: window.innerHeight,
+};
+
 // Scene
 const scene = new THREE.Scene();
 
@@ -121,6 +129,12 @@ gltfLoader.load("models/IsoGym.glb", (gltf) => {
 
   ledA.material = ledMaterial;
   ledB.material = ledMaterial;
+
+  if (sizes.height < 1000) {
+    console.log("here");
+    gltf.scene.position.z = -1.5;
+    gltf.scene.position.x = -1.5;
+  }
 });
 /**
  * Textures
@@ -129,14 +143,6 @@ gltfLoader.load("models/IsoGym.glb", (gltf) => {
 function init() {
   const ambientLight = new THREE.AmbientLight("white", 2);
   scene.add(ambientLight);
-
-  /**
-   * Sizes
-   */
-  const sizes = {
-    width: window.innerWidth,
-    height: window.innerHeight,
-  };
 
   window.addEventListener("resize", () => {
     // Update sizes
